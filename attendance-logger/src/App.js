@@ -25,7 +25,7 @@ function App() {
   
   }
   return (
-    <div className="h-screen  bg-gray-300">
+    <div className="h-screen bg-gray-900">
       <div className="flex justify-start items-center flex-col h-full">
         <div className="flex my-20">
           <input type="text" placeholder='ESP32 IP Address' className="text-blue-500 w-200 h-10  text-center" onChange={e=>setWebSocketIP(e.target.value)} />
