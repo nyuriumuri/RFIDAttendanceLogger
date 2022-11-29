@@ -8,8 +8,8 @@
 #include <ESPAsyncWebServer.h>
 
 // Replace with your network credentials
-const char* ssid = "SSSID";
-const char* password = "PSWRD";
+const char* ssid = "SSID";
+const char* password = "PWRD";
 
 MFRC522DriverPinSimple ss_pin(5); // Configurable, see typical pin layout above.
 
@@ -68,7 +68,6 @@ void setup()
 
   initWebSocket();
 
-  // Route for root / web page
   // Start server
   server.begin();
   while (!Serial)

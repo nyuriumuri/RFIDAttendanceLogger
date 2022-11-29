@@ -1,0 +1,12 @@
+{
+    "rfidData": {
+        "F3 00 AA 0E":{
+            "name": "Mohamed Mansour",
+            "id": "900172822"
+        }, 
+        "Ab AB AB AB":{
+            "name": "Student 2",
+            "id": "900xxxXXX"
+        }
+}
+}
