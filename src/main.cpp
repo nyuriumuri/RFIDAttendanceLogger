@@ -8,8 +8,8 @@
 #include <ESPAsyncWebServer.h>
 
 // Replace with your network credentials
-const char* ssid = "SSID";
-const char* password = "PWRD";
+const char* ssid = "Meligy";
+const char* password = "12345678";
 
 MFRC522DriverPinSimple ss_pin(5); // Configurable, see typical pin layout above.
 
