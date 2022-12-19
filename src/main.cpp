@@ -3,7 +3,7 @@
 //#include <MFRC522DriverI2C.h>
 #include <MFRC522DriverPinSimple.h>
 #include <MFRC522Debug.h>
-#include <WiFi.h>
+//#include <WiFi.h>
 // #include <AsyncTCP.h>
 // #include <ESPAsyncWebServer.h>
 #include <WiFiManager.h>
@@ -51,6 +51,10 @@ String tagContent = "";
 
 #define LED 12
 
+#define Red 27
+#define Blue 26
+#define Green 25
+
 #define BUZZ 13
 
 // void notifyClients() {
@@ -82,33 +86,54 @@ String tagContent = "";
 //   ws.onEvent(onEvent);
 //   server.addHandler(&ws);
 // }
+
+ WiFiManager wm;
 void setup()
 {
   
   pinMode (LED,OUTPUT);
   pinMode (BUZZ,OUTPUT);
+  pinMode (Red,OUTPUT);
+  pinMode (Green,OUTPUT);
+  pinMode (Blue,OUTPUT);
+
   Serial.begin(115200); // Initialize serial communications with the PC for debugging.
 //   delay(400);
 
- WiFiManager wm;
+digitalWrite(Red, LOW);
+digitalWrite(Green, HIGH);
+digitalWrite(Blue, HIGH);
+
 
  
-    // wm.resetSettings();
-    bool res;
+  bool res;
 
-    res = wm.autoConnect("AutoConnectAP","password"); // password protected ap
+  res = wm.autoConnect("ESP32","00000000"); // password protected ap
 
-    if(!res) {
-        Serial.println("Failed to connect");
-    } 
+  if(!res) {
+      Serial.println("Failed to connect");
+  }
+  else {
+      digitalWrite(Green, LOW);
+  } 
+
 
 
 
   // WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("Connecting to WiFi..");
-  }
+  // while (!res) {
+  //    wm.resetSettings();
+  //   // delay(1000);
+  //   Serial.println("Connecting to WiFi..");
+  //   res = wm.autoConnect("ESP32","0000"); // password protected ap
+
+  // if(!res) {
+  //     Serial.println("Failed to connect");
+  // }
+  // else {
+  //     digitalWrite(Green, LOW);
+  // } 
+  // }
 
   // // Print ESP Local IP Address
   Serial.println(WiFi.localIP());
@@ -118,8 +143,7 @@ void setup()
 
   // Start server
   // server.begin();
-  while (!Serial)
-    ;                                                     // Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4).
+                                             // Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4).
   mfrc522.PCD_Init();                                     // Init MFRC522 board.
   MFRC522Debug::PCD_DumpVersionToSerial(mfrc522, Serial); // Show details of PCD - MFRC522 Card Reader details.
   Serial.println(F("Scan PICC to see UID, SAK, type, and data blocks..."));
@@ -127,11 +151,31 @@ void setup()
 
 void loop()
 {
+  // return if wifi is not connected
+  if (WiFi.status() != WL_CONNECTED) {
+  digitalWrite(Red, LOW);
+  digitalWrite(Green, HIGH);
+  digitalWrite(Blue, HIGH);
+  bool res = wm.autoConnect("ESP32","00000000"); // password protected ap
+
+  if(!res) {
+      Serial.println("Failed to connect");
+      return;
+  }
+  else {
+      digitalWrite(Green, LOW);
+  } 
+
+ 
+    // return;
+  }
     // ws.cleanupClients();
   // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
     if (!mqttClient.connected())
     reconnect();
   mqttClient.loop();
+  digitalWrite(Red, HIGH);
+  digitalWrite(Green, LOW);
   if (!mfrc522.PICC_IsNewCardPresent())
   {
     return;
@@ -149,7 +193,7 @@ void loop()
   Serial.println("Printing only the Card ID:");
   digitalWrite(LED, HIGH);
   digitalWrite(BUZZ, HIGH);
-  delay(1000);
+  delay(100);
   digitalWrite(LED, LOW);
   digitalWrite(BUZZ, LOW);
 
