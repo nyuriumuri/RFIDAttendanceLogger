@@ -6,10 +6,10 @@
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-
+#include <WiFiManager.h>
 // Replace with your network credentials
-const char* ssid = "Meligy";
-const char* password = "12345678";
+const char* ssid = "";
+const char* password = "";
 
 MFRC522DriverPinSimple ss_pin(5); // Configurable, see typical pin layout above.
 
@@ -22,7 +22,9 @@ String tagContent = "";
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
+#define LED 12
 
+#define BUZZ 13
 
 void notifyClients() {
     Serial.printf("Notifying: %s\n", tagContent);
@@ -55,15 +57,33 @@ void initWebSocket() {
 }
 void setup()
 {
+  
+  pinMode (LED,OUTPUT);
+  pinMode (BUZZ,OUTPUT);
   Serial.begin(115200); // Initialize serial communications with the PC for debugging.
 //   delay(400);
-  WiFi.begin(ssid, password);
+
+ WiFiManager wm;
+
+ 
+    wm.resetSettings();
+    bool res;
+
+    res = wm.autoConnect("AutoConnectAP","password"); // password protected ap
+
+    if(!res) {
+        Serial.println("Failed to connect");
+    } 
+
+
+
+  // WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.println("Connecting to WiFi..");
   }
 
-  // Print ESP Local IP Address
+  // // Print ESP Local IP Address
   Serial.println(WiFi.localIP());
 
   initWebSocket();
@@ -96,6 +116,12 @@ void loop()
   // MFRC522Debug::PICC_DumpToSerial(mfrc522, Serial, &(mfrc522.uid));
 
   Serial.println("Printing only the Card ID:");
+  digitalWrite(LED, HIGH);
+  digitalWrite(BUZZ, HIGH);
+  delay(1000);
+  digitalWrite(LED, LOW);
+  digitalWrite(BUZZ, LOW);
+
   Serial.println("--------------------------");
   for (byte i = 0; i < mfrc522.uid.size; i++)
   {
@@ -107,6 +133,7 @@ void loop()
 
   Serial.println(tagContent);
   notifyClients();
+  
   tagContent = "";
   delay(1000);
 }
