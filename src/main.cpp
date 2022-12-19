@@ -4,12 +4,39 @@
 #include <MFRC522DriverPinSimple.h>
 #include <MFRC522Debug.h>
 #include <WiFi.h>
-#include <AsyncTCP.h>
-#include <ESPAsyncWebServer.h>
+// #include <AsyncTCP.h>
+// #include <ESPAsyncWebServer.h>
 #include <WiFiManager.h>
+#include <PubSubClient.h>
+#include <stdlib.h>
 // Replace with your network credentials
 const char* ssid = "";
 const char* password = "";
+WiFiClient wifiClient;
+PubSubClient mqttClient(wifiClient); 
+const char* mqttServer = "broker.emqx.io";
+int mqttPort = 1883;
+void setupMQTT() {
+  mqttClient.setServer(mqttServer, mqttPort);
+
+  // set the callback function
+}
+
+void reconnect() {
+  Serial.println("Connecting to MQTT Broker...");
+  while (!mqttClient.connected()) {
+      Serial.println("Reconnecting to MQTT Broker..");
+      String clientId = "ESP32Client-";
+      clientId += String(random(0xffff), HEX);
+      
+      if (mqttClient.connect(clientId.c_str())) {
+        Serial.println("Connected.");
+        // subscribe to topic
+        mqttClient.subscribe("/swa/commands");
+      }
+      
+  }
+}
 
 MFRC522DriverPinSimple ss_pin(5); // Configurable, see typical pin layout above.
 
@@ -19,42 +46,42 @@ MFRC522 mfrc522{driver}; // Create MFRC522 instance.
 
 String tagContent = "";
 
-AsyncWebServer server(80);
-AsyncWebSocket ws("/ws");
+// AsyncWebServer server(80);
+// AsyncWebSocket ws("/ws");
 
 #define LED 12
 
 #define BUZZ 13
 
-void notifyClients() {
-    Serial.printf("Notifying: %s\n", tagContent);
-  ws.textAll(String(tagContent));
-}
+// void notifyClients() {
+//     Serial.printf("Notifying: %s\n", tagContent);
+//   ws.textAll(String(tagContent));
+// }
 
 
-void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
-             void *arg, uint8_t *data, size_t len) {
-  switch (type) {
-    case WS_EVT_CONNECT:
-      Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
-      break;
-    case WS_EVT_DISCONNECT:
-      Serial.printf("WebSocket client #%u disconnected\n", client->id());
-      break;
-    case WS_EVT_DATA:
-      Serial.printf("Got message: %s", (char *) data);
-    //   handleWebSocketMessage(arg, data, len);
-      break;
-    case WS_EVT_PONG:
-    case WS_EVT_ERROR:
-      break;
-  }
-}
+// void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
+//              void *arg, uint8_t *data, size_t len) {
+//   switch (type) {
+//     case WS_EVT_CONNECT:
+//       Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+//       break;
+//     case WS_EVT_DISCONNECT:
+//       Serial.printf("WebSocket client #%u disconnected\n", client->id());
+//       break;
+//     case WS_EVT_DATA:
+//       Serial.printf("Got message: %s", (char *) data);
+//     //   handleWebSocketMessage(arg, data, len);
+//       break;
+//     case WS_EVT_PONG:
+//     case WS_EVT_ERROR:
+//       break;
+//   }
+// }
 
-void initWebSocket() {
-  ws.onEvent(onEvent);
-  server.addHandler(&ws);
-}
+// void initWebSocket() {
+//   ws.onEvent(onEvent);
+//   server.addHandler(&ws);
+// }
 void setup()
 {
   
@@ -66,7 +93,7 @@ void setup()
  WiFiManager wm;
 
  
-    wm.resetSettings();
+    // wm.resetSettings();
     bool res;
 
     res = wm.autoConnect("AutoConnectAP","password"); // password protected ap
@@ -85,11 +112,12 @@ void setup()
 
   // // Print ESP Local IP Address
   Serial.println(WiFi.localIP());
-
-  initWebSocket();
+  setupMQTT();
+  
+  // initWebSocket();
 
   // Start server
-  server.begin();
+  // server.begin();
   while (!Serial)
     ;                                                     // Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4).
   mfrc522.PCD_Init();                                     // Init MFRC522 board.
@@ -99,8 +127,11 @@ void setup()
 
 void loop()
 {
-    ws.cleanupClients();
+    // ws.cleanupClients();
   // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
+    if (!mqttClient.connected())
+    reconnect();
+  mqttClient.loop();
   if (!mfrc522.PICC_IsNewCardPresent())
   {
     return;
@@ -125,15 +156,19 @@ void loop()
   Serial.println("--------------------------");
   for (byte i = 0; i < mfrc522.uid.size; i++)
   {
-    tagContent.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
+    tagContent.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : ""));
     tagContent.concat(String(mfrc522.uid.uidByte[i], HEX));
   }
 
   tagContent.toUpperCase();
 
   Serial.println(tagContent);
-  notifyClients();
+  // notifyClients();
   
+  Serial.println(mqttClient.connected());
+  String message = "{ \"msg\": \"" + tagContent + "\" }";
+  Serial.println(message.c_str());
+  mqttClient.publish("MKOSJVMJGJ/orange", message.c_str());
   tagContent = "";
   delay(1000);
 }
