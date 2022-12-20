@@ -1,11 +1,7 @@
 #include <MFRC522v2.h>
 #include <MFRC522DriverSPI.h>
-//#include <MFRC522DriverI2C.h>
 #include <MFRC522DriverPinSimple.h>
 #include <MFRC522Debug.h>
-//#include <WiFi.h>
-// #include <AsyncTCP.h>
-// #include <ESPAsyncWebServer.h>
 #include <WiFiManager.h>
 #include <PubSubClient.h>
 #include <stdlib.h>
@@ -41,13 +37,9 @@ void reconnect() {
 MFRC522DriverPinSimple ss_pin(5); // Configurable, see typical pin layout above.
 
 MFRC522DriverSPI driver{ss_pin}; // Create SPI driver.
-// MFRC522DriverI2C driver{}; // Create I2C driver.
 MFRC522 mfrc522{driver}; // Create MFRC522 instance.
 
 String tagContent = "";
-
-// AsyncWebServer server(80);
-// AsyncWebSocket ws("/ws");
 
 #define LED 12
 
@@ -57,35 +49,6 @@ String tagContent = "";
 
 #define BUZZ 13
 
-// void notifyClients() {
-//     Serial.printf("Notifying: %s\n", tagContent);
-//   ws.textAll(String(tagContent));
-// }
-
-
-// void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
-//              void *arg, uint8_t *data, size_t len) {
-//   switch (type) {
-//     case WS_EVT_CONNECT:
-//       Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
-//       break;
-//     case WS_EVT_DISCONNECT:
-//       Serial.printf("WebSocket client #%u disconnected\n", client->id());
-//       break;
-//     case WS_EVT_DATA:
-//       Serial.printf("Got message: %s", (char *) data);
-//     //   handleWebSocketMessage(arg, data, len);
-//       break;
-//     case WS_EVT_PONG:
-//     case WS_EVT_ERROR:
-//       break;
-//   }
-// }
-
-// void initWebSocket() {
-//   ws.onEvent(onEvent);
-//   server.addHandler(&ws);
-// }
 
  WiFiManager wm;
 void setup()
@@ -98,7 +61,6 @@ void setup()
   pinMode (Blue,OUTPUT);
 
   Serial.begin(115200); // Initialize serial communications with the PC for debugging.
-//   delay(400);
 
 digitalWrite(Red, LOW);
 digitalWrite(Green, HIGH);
@@ -117,23 +79,6 @@ digitalWrite(Blue, HIGH);
       digitalWrite(Green, LOW);
   } 
 
-
-
-
-  // WiFi.begin(ssid, password);
-  // while (!res) {
-  //    wm.resetSettings();
-  //   // delay(1000);
-  //   Serial.println("Connecting to WiFi..");
-  //   res = wm.autoConnect("ESP32","0000"); // password protected ap
-
-  // if(!res) {
-  //     Serial.println("Failed to connect");
-  // }
-  // else {
-  //     digitalWrite(Green, LOW);
-  // } 
-  // }
 
   // // Print ESP Local IP Address
   Serial.println(WiFi.localIP());
